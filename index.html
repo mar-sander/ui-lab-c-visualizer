@@ -1,1 +1,48 @@
-
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111923">
+  <title>C Code Visualizer | UI LAB M0</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.20/lib/codemirror.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/codemirror@5.65.20/lib/codemirror.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/codemirror@5.65.20/mode/clike/clike.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/codemirror@5.65.20/addon/edit/matchbrackets.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">C<span>.</span></span><div><strong>C Code Visualizer</strong><small>UI LAB / STAGE M0 · 試遊版</small></div></div>
+      <button type="button" id="history-open" class="header-button"><span aria-hidden="true">◷</span> 履歴を開く</button>
+    </header>
+    <main>
+      <section class="intro" aria-label="このモックについて">
+        <div><p class="eyebrow">TRY / OBSERVE / TRY AGAIN</p><h1>コードの動きを、追いかけよう。</h1><p>書いた行と、コンピュータがいる行を見比べながら進めてみてください。</p></div>
+        <span class="demo-badge">● 固定データで動く UI モック</span>
+      </section>
+      <div class="workspace">
+        <section class="panel code-panel" aria-labelledby="code-heading">
+          <div class="panel-heading"><div><span class="section-index">01 / CODE</span><h2 id="code-heading">コードを書く</h2></div><span class="panel-hint">書き換えて試せます</span></div>
+          <div class="editor-guide"><span><i class="legend-cursor"></i> 青い行番号：カーソル</span><span><i class="legend-execution"></i> 緑の帯と▶：実行位置</span></div>
+          <div class="editor-frame"><textarea id="code-input" aria-label="C言語のコード入力欄" spellcheck="false"></textarea></div>
+          <div class="code-footer">TIP　括弧の隣にカーソルを置くと、対応する括弧が光ります。</div>
+        </section>
+        <section class="panel flow-panel" aria-labelledby="flow-heading">
+          <div class="panel-heading"><div><span class="section-index">02 / FLOW</span><h2 id="flow-heading">処理の流れ</h2></div><span class="flow-label">コンピュータの実況席</span></div>
+          <div id="flow-content" class="flow-content" aria-live="polite" aria-atomic="true"></div>
+          <div class="step-controls" aria-label="STEP操作"><button type="button" id="step-prev" class="step-button" disabled>← 前へ</button><span id="step-count" class="step-count">— / —</span><button type="button" id="step-next" class="step-button" disabled>次へ →</button></div>
+        </section>
+      </div>
+      <section class="action-area" aria-label="可視化操作">
+        <div class="action-row"><button type="button" id="visualize" class="visualize-button"><span class="play-icon" aria-hidden="true">▶</span><span id="visualize-text">コードを可視化する</span><span class="button-arrow" aria-hidden="true">↗</span></button><div class="demo-switch"><label for="demo-mode">DEMO の結果</label><select id="demo-mode"><option value="success">可視化できる</option><option value="failure">あともう一歩</option></select></div></div>
+        <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+      </section>
+      <p class="footnote">この画面は UI の試遊版です。入力した C コードの解析・実行・正誤判定は行いません。表示される STEP と結果は固定のデモデータです。</p>
+    </main>
+  </div>
+  <dialog id="history-dialog" class="history-dialog" aria-labelledby="history-title"><div class="dialog-heading"><div><span class="section-index">YOUR SAVE POINTS</span><h2 id="history-title">試行の履歴</h2></div><button type="button" id="history-close" class="close-button" aria-label="履歴を閉じる">×</button></div><p>過去のコードを選ぶと、編集欄に戻せます。この履歴はデモ用です。</p><div id="history-list" class="history-list"></div></dialog>
+</body>
+</html>
