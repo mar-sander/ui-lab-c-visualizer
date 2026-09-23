@@ -190,6 +190,7 @@ function showIdle(title, description, icon = "◎") {
   $("step-count").textContent = "— / —";
   $("step-prev").disabled = true;
   $("step-next").disabled = true;
+  $("quick-result").disabled = true;
 }
 
 // 編集カーソルの位置はガターだけに示し、実行位置と混同しないようにします。
@@ -238,6 +239,7 @@ function renderStep() {
   $("step-count").textContent = `${activeStep + 1} / ${currentSteps.length}`;
   $("step-prev").disabled = activeStep === 0;
   $("step-next").disabled = activeStep === currentSteps.length - 1;
+  $("quick-result").disabled = activeStep === currentSteps.length - 1;
   const printedStep = currentSteps.slice(0, activeStep + 1).reverse().find((item) => item.output !== undefined);
   setOutput(printedStep ? "ready" : "progress", printedStep?.output);
   if (activeStep === currentSteps.length - 1) {
@@ -352,6 +354,11 @@ $("step-next").addEventListener("click", () => {
 $("step-prev").addEventListener("click", () => {
   if (activeStep <= 0 || !hasCurrentResult()) return;
   activeStep--;
+  renderStep();
+});
+$("quick-result").addEventListener("click", () => {
+  if (activeStep < 0 || !currentSteps.length || !hasCurrentResult()) return;
+  activeStep = currentSteps.length - 1;
   renderStep();
 });
 demoMode.addEventListener("change", () => { if (resultCode !== null) invalidateResult("DEMOの結果を切り替えました。もう一度可視化してください。"); });
