@@ -61,6 +61,42 @@ let currentCursorLine = -1;
 let highlightedLine = -1;
 let resultCode = null;
 let pendingRequest = 0;
+let alignmentCheckPending = false;
+
+// 表示幅変更後、各行のガター描画と本文の座標が実際にずれた場合だけ再計算します。
+function checkEditorAlignment() {
+  if (alignmentCheckPending) return;
+  alignmentCheckPending = true;
+  requestAnimationFrame(() => {
+    alignmentCheckPending = false;
+    const wrapper = editor.getWrapperElement();
+    const gutters = wrapper.querySelector(".CodeMirror-gutters");
+    const sizer = wrapper.querySelector(".CodeMirror-sizer");
+    const scroll = wrapper.querySelector(".CodeMirror-scroll");
+    const gutterRect = gutters.getBoundingClientRect();
+    const numberRects = wrapper.querySelectorAll(".CodeMirror-code .CodeMirror-gutter-wrapper .CodeMirror-linenumber");
+    const displacedNumber = Array.from(numberRects).some((number) => {
+      const rect = number.getBoundingClientRect();
+      return Math.abs(rect.left - gutterRect.left) > 1 || rect.right > gutterRect.right + 1;
+    });
+    if (Math.abs(sizer.getBoundingClientRect().left + scroll.scrollLeft - gutterRect.right) > 1 || displacedNumber) {
+      editor.refresh();
+    }
+  });
+}
+
+// STEPの追跡では行の上下だけを移動し、先頭文字を隠す横スクロールを起こしません。
+function scrollExecutionLineIntoView(line) {
+  const { top, clientHeight } = editor.getScrollInfo();
+  const linePosition = editor.charCoords({ line, ch: 0 }, "local");
+  const margin = 50;
+  let nextTop = top;
+  if (linePosition.top < top + margin) nextTop = Math.max(0, linePosition.top - margin);
+  else if (linePosition.bottom > top + clientHeight - margin) {
+    nextTop = linePosition.bottom - clientHeight + margin;
+  }
+  editor.scrollTo(0, nextTop);
+}
 
 function element(tag, className, content) {
   const node = document.createElement(tag);
@@ -102,6 +138,7 @@ function updateCursor() {
   }
   currentCursorLine = line;
   editor.addLineClass(line, "gutter", "CodeMirror-activeline-gutter");
+  checkEditorAlignment();
 }
 
 function showExecutionLine(lineNumber) {
@@ -113,7 +150,8 @@ function showExecutionLine(lineNumber) {
   if (highlightedLine < 0 || highlightedLine >= editor.lineCount()) return;
   editor.addLineClass(highlightedLine, "background", "CodeMirror-execution-line");
   editor.addLineClass(highlightedLine, "gutter", "CodeMirror-execution-gutter");
-  editor.scrollIntoView({ line: highlightedLine, ch: 0 }, 50);
+  scrollExecutionLineIntoView(highlightedLine);
+  checkEditorAlignment();
 }
 
 function renderStep() {
@@ -161,6 +199,8 @@ editor.on("change", () => {
   if (resultCode !== null) invalidateResult();
 });
 updateCursor();
+window.addEventListener("resize", checkEditorAlignment);
+window.visualViewport?.addEventListener("resize", checkEditorAlignment);
 showIdle("準備ができました", "左のコードを見たり書き換えたりして、可視化ボタンを押してください。");
 
 visualizeButton.addEventListener("pointerdown", () => visualizeButton.classList.add("pressed"));
