@@ -22,13 +22,9 @@
       </div>
     </header>
     <main>
-      <section class="intro" aria-label="このモックについて">
-        <div><p class="eyebrow">TRY / OBSERVE / TRY AGAIN</p><h1>コードの動きを、追いかけよう。</h1><p>書いた行と、コンピュータがいる行を見比べながら進めてみてください。</p></div>
-        <span class="demo-badge">● 固定データで動く UI モック</span>
-      </section>
       <div class="workspace">
-        <section class="panel code-panel" aria-labelledby="code-heading">
-          <div class="panel-heading"><div><span class="section-index">01 / CODE</span><h2 id="code-heading">コードを書く</h2></div><span class="panel-hint">書き換えて試せます</span></div>
+        <section class="panel code-panel" aria-label="01 / CODE">
+          <div class="panel-heading"><span class="section-index">01 / CODE</span></div>
           <div class="editor-guide"><span><i class="legend-cursor"></i> カーソル位置</span><span><i class="legend-execution"></i> 実行位置</span></div>
           <div class="editor-frame"><textarea id="code-input" aria-label="C言語のコード入力欄" spellcheck="false"></textarea></div>
           <div class="scanf-field">
@@ -36,16 +32,15 @@
             <input id="scanf-input" type="text" inputmode="numeric" autocomplete="off" placeholder="例：75" aria-describedby="scanf-hint" disabled>
             <span id="scanf-hint">このサンプルでは使用しません</span>
           </div>
-          <div class="code-footer">TIP　括弧の隣にカーソルを置くと、対応する括弧が光ります。</div>
         </section>
         <section class="action-area" aria-label="可視化操作">
           <div class="action-row"><button type="button" id="visualize" class="visualize-button"><span class="play-icon" aria-hidden="true">▶</span><span id="visualize-text">コードを可視化する</span><span class="button-arrow" aria-hidden="true">↗</span></button><div class="demo-switch"><label for="demo-mode">DEMO の結果</label><select id="demo-mode"><option value="success">可視化できる</option><option value="failure">あともう一歩</option></select></div></div>
           <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
         </section>
-        <section class="panel flow-panel" aria-labelledby="flow-heading">
-          <div class="panel-heading"><div><span class="section-index">02 / FLOW</span><h2 id="flow-heading">処理の流れ</h2></div><span class="flow-label">コンピュータの実況席</span></div>
+        <section class="panel flow-panel" aria-label="02 / FLOW">
+          <div class="panel-heading"><span class="section-index">02 / FLOW</span></div>
           <div id="flow-content" class="flow-content" aria-live="polite" aria-atomic="true"></div>
-          <div class="output-card" role="status" aria-live="polite" aria-atomic="true"><div><span class="output-heading">OUTPUT / 出力結果</span><span id="output-state" class="output-state">まだ出力されていません</span></div><output id="output-value">—</output></div>
+          <div class="output-card"><div class="output-info" role="status" aria-live="polite" aria-atomic="true"><span class="output-heading">OUTPUT / 出力結果</span><span id="output-state" class="output-state">まだ出力されていません</span></div><div class="output-result"><output id="output-value" role="status" aria-live="polite">—</output><button type="button" id="quick-result" class="quick-result-button" disabled>結果を見る →</button></div></div>
           <div class="step-controls" aria-label="STEP操作"><button type="button" id="step-prev" class="step-button" disabled>← 前へ</button><span id="step-count" class="step-count">— / —</span><button type="button" id="step-next" class="step-button" disabled>次へ →</button></div>
         </section>
       </div>

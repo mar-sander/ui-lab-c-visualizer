@@ -85,6 +85,12 @@ button:focus-visible,select:focus-visible{outline-color:var(--accent-yellow)}
 .output-state{font-size:12px;color:var(--muted)}
 .output-card output{max-width:50%;overflow-wrap:anywhere;font-family:ui-monospace,Consolas,monospace;font-size:20px;font-weight:700;color:var(--muted)}
 .output-card.has-output output{color:var(--accent-yellow)}
+.output-info{display:flex;flex-direction:column;gap:4px;min-width:0}
+.output-card>.output-result{display:flex;flex-direction:row;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px 14px;min-width:0}
+.output-card .output-result output{max-width:none}
+.quick-result-button{min-height:44px;padding:8px 12px;border:1px solid var(--line-strong);border-radius:9px;background:var(--surface);color:var(--text);font-size:12px;white-space:nowrap;touch-action:manipulation}
+.quick-result-button:not(:disabled):hover{background:var(--surface-hover)}
+.quick-result-button:disabled{opacity:.48;cursor:not-allowed}
 @media(max-width:900px){
   .code-panel,.action-area,.flow-panel{grid-column:1;grid-row:auto}
 }
@@ -97,3 +103,7 @@ button:focus-visible,select:focus-visible{outline-color:var(--accent-yellow)}
   .scanf-field span{grid-column:1 / -1}
   .output-card{margin:0 13px 12px}
 }
+
+/* Stage UI-D2: 説明を減らし、CODE / FLOW の入口をそろえて詰めます。 */
+.panel-heading{min-height:48px;padding:12px 20px}
+@media(max-width:600px){.panel-heading{padding:12px 14px}}
