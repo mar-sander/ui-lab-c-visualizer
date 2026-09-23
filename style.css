@@ -22,14 +22,13 @@ button:focus-visible,select:focus-visible{outline-color:var(--accent-yellow)}
 .editor-frame{background:var(--surface-inset);border-color:var(--line)}
 .CodeMirror{background:var(--surface-inset);color:#dedede}
 .CodeMirror-gutters{background:#191919;border-right-color:var(--line)}
-.CodeMirror-linenumber{color:#8f8f8f}
+.CodeMirror-linenumber{color:#8f8f8f;font-variant-numeric:tabular-nums;font-weight:400}
 .CodeMirror-cursor{border-left-color:#ffffff}
 .CodeMirror-activeline-gutter{background:#454545}
-.CodeMirror-activeline-gutter .CodeMirror-linenumber{color:#ffffff}
+.CodeMirror-activeline-gutter .CodeMirror-linenumber{color:#ffffff;font-weight:400}
 .CodeMirror-execution-line{background:var(--accent-yellow-soft)}
 .CodeMirror-execution-gutter{background:var(--accent-yellow-gutter)}
-.CodeMirror-execution-gutter .CodeMirror-linenumber{color:var(--accent-yellow);font-weight:900}
-.CodeMirror-execution-marker{color:var(--accent-yellow)}
+.CodeMirror-execution-gutter .CodeMirror-linenumber{color:var(--accent-yellow);font-weight:400}
 .CodeMirror-matchingbracket{color:#ffffff!important;background:#4a4a4a;outline:1px solid #c9c9c9}
 .CodeMirror-nonmatchingbracket{color:#ffffff!important;background:#333333;text-decoration:underline double}
 .CodeMirror .cm-keyword,.CodeMirror .cm-type{color:#f4f4f4;font-weight:700}

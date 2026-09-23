@@ -52,7 +52,7 @@ const editor = CodeMirror.fromTextArea($("code-input"), {
   matchBrackets: true,
   tabSize: 4,
   indentUnit: 4,
-  gutters: ["CodeMirror-linenumbers", "execution-markers"]
+  gutters: ["CodeMirror-linenumbers"]
 });
 editor.setValue(sampleCode);
 
@@ -108,15 +108,11 @@ function showExecutionLine(lineNumber) {
   if (highlightedLine >= 0) {
     editor.removeLineClass(highlightedLine, "background", "CodeMirror-execution-line");
     editor.removeLineClass(highlightedLine, "gutter", "CodeMirror-execution-gutter");
-    editor.setGutterMarker(highlightedLine, "execution-markers", null);
   }
   highlightedLine = lineNumber === null ? -1 : lineNumber - 1;
   if (highlightedLine < 0 || highlightedLine >= editor.lineCount()) return;
   editor.addLineClass(highlightedLine, "background", "CodeMirror-execution-line");
   editor.addLineClass(highlightedLine, "gutter", "CodeMirror-execution-gutter");
-  const marker = element("span", "CodeMirror-execution-marker", "▶");
-  marker.setAttribute("aria-label", "実行中");
-  editor.setGutterMarker(highlightedLine, "execution-markers", marker);
   editor.scrollIntoView({ line: highlightedLine, ch: 0 }, 50);
 }
 
