@@ -16,7 +16,10 @@
   <div class="app-shell">
     <header class="site-header">
       <div class="brand"><span class="brand-mark" aria-hidden="true">C<span>.</span></span><div><strong>C Code Visualizer</strong><small>UI LAB / STAGE M0 · 試遊版</small></div></div>
-      <button type="button" id="history-open" class="header-button"><span aria-hidden="true">◷</span> 履歴を開く</button>
+      <div class="header-tools">
+        <label class="sample-picker" for="sample-select"><span>サンプル</span><select id="sample-select" aria-label="サンプルコード"><option value="for">for文の基本</option><option value="scanf">scanf整数入力</option><option value="custom" hidden>履歴のコード</option></select></label>
+        <button type="button" id="history-open" class="header-button"><span aria-hidden="true">◷</span> 履歴を開く</button>
+      </div>
     </header>
     <main>
       <section class="intro" aria-label="このモックについて">
@@ -28,18 +31,24 @@
           <div class="panel-heading"><div><span class="section-index">01 / CODE</span><h2 id="code-heading">コードを書く</h2></div><span class="panel-hint">書き換えて試せます</span></div>
           <div class="editor-guide"><span><i class="legend-cursor"></i> カーソル位置</span><span><i class="legend-execution"></i> 実行位置</span></div>
           <div class="editor-frame"><textarea id="code-input" aria-label="C言語のコード入力欄" spellcheck="false"></textarea></div>
+          <div class="scanf-field">
+            <label for="scanf-input">入力値（scanf）</label>
+            <input id="scanf-input" type="text" inputmode="numeric" autocomplete="off" placeholder="例：75" aria-describedby="scanf-hint" disabled>
+            <span id="scanf-hint">このサンプルでは使用しません</span>
+          </div>
           <div class="code-footer">TIP　括弧の隣にカーソルを置くと、対応する括弧が光ります。</div>
+        </section>
+        <section class="action-area" aria-label="可視化操作">
+          <div class="action-row"><button type="button" id="visualize" class="visualize-button"><span class="play-icon" aria-hidden="true">▶</span><span id="visualize-text">コードを可視化する</span><span class="button-arrow" aria-hidden="true">↗</span></button><div class="demo-switch"><label for="demo-mode">DEMO の結果</label><select id="demo-mode"><option value="success">可視化できる</option><option value="failure">あともう一歩</option></select></div></div>
+          <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
         </section>
         <section class="panel flow-panel" aria-labelledby="flow-heading">
           <div class="panel-heading"><div><span class="section-index">02 / FLOW</span><h2 id="flow-heading">処理の流れ</h2></div><span class="flow-label">コンピュータの実況席</span></div>
           <div id="flow-content" class="flow-content" aria-live="polite" aria-atomic="true"></div>
+          <div class="output-card" role="status" aria-live="polite" aria-atomic="true"><div><span class="output-heading">OUTPUT / 出力結果</span><span id="output-state" class="output-state">まだ出力されていません</span></div><output id="output-value">—</output></div>
           <div class="step-controls" aria-label="STEP操作"><button type="button" id="step-prev" class="step-button" disabled>← 前へ</button><span id="step-count" class="step-count">— / —</span><button type="button" id="step-next" class="step-button" disabled>次へ →</button></div>
         </section>
       </div>
-      <section class="action-area" aria-label="可視化操作">
-        <div class="action-row"><button type="button" id="visualize" class="visualize-button"><span class="play-icon" aria-hidden="true">▶</span><span id="visualize-text">コードを可視化する</span><span class="button-arrow" aria-hidden="true">↗</span></button><div class="demo-switch"><label for="demo-mode">DEMO の結果</label><select id="demo-mode"><option value="success">可視化できる</option><option value="failure">あともう一歩</option></select></div></div>
-        <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
-      </section>
       <p class="footnote">この画面は UI の試遊版です。入力した C コードの解析・実行・正誤判定は行いません。表示される STEP と結果は固定のデモデータです。</p>
     </main>
   </div>

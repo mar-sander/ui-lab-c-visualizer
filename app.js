@@ -15,14 +15,30 @@ int main(void) {
     return 0;
 }`;
 
+const scanfCode = `#include <stdio.h>
+
+int main(void) {
+    int n;
+
+    scanf("%d", &n);
+
+    printf("%d\\n", n);
+    return 0;
+}`;
+
+const samples = {
+  for: { code: sampleCode, usesInput: false },
+  scanf: { code: scanfCode, usesInput: true }
+};
+
 const historyEntries = [
-  { time: "12:55", name: "ループ練習", result: "可視化できた", code: sampleCode, mode: "success" },
-  { time: "12:47", name: "for文 練習", result: "あともう一歩", code: sampleCode.replace("sum = sum + i;", "sum = sum + i"), mode: "failure" },
-  { time: "12:41", name: "printf 練習", result: "可視化できた", code: `#include <stdio.h>\n\nint main(void) {\n    printf("こんにちは\\n");\n    return 0;\n}`, mode: "success" }
+  { time: "12:55", name: "ループ練習", result: "可視化できた", code: sampleCode, mode: "success", sample: "for" },
+  { time: "12:47", name: "for文 練習", result: "あともう一歩", code: sampleCode.replace("sum = sum + i;", "sum = sum + i"), mode: "failure", sample: "for" },
+  { time: "12:41", name: "printf 練習", result: "可視化できた", code: `#include <stdio.h>\n\nint main(void) {\n    printf("こんにちは\\n");\n    return 0;\n}`, mode: "success", sample: "custom" }
 ];
 
 // 同じ7行目に何度も戻ることで、for文の反復を体験できます。
-const steps = [
+const forSteps = [
   { line: 4, title: "最初の値を用意", detail: "合計を入れる sum を 0 にします。", change: "sum", before: "—", after: "0", next: "5行目：i を用意" },
   { line: 5, title: "数えるための変数を用意", detail: "繰り返しに使う i を用意します。", change: "i", before: "—", after: "未代入", next: "7行目：繰り返しを開始" },
   { line: 7, title: "繰り返しを開始", detail: "i を 1 にして、繰り返しを始めます。", change: "i", before: "未代入", after: "1", next: "7行目：条件を調べる" },
@@ -36,15 +52,28 @@ const steps = [
   { line: 8, title: "合計を更新", detail: "現在の sum に i の 3 を加えます。", change: "sum", before: "3", after: "6", next: "7行目：i を増やす" },
   { line: 7, title: "i を増やす", detail: "i を 4 にします。", change: "i", before: "3", after: "4", next: "7行目：条件を調べる" },
   { line: 7, title: "ループを抜ける", detail: "4 <= 3 は偽。繰り返しが終わります。", change: "i <= 3", before: "4 <= 3", after: "偽", next: "11行目：結果を表示" },
-  { line: 11, title: "結果を表示", detail: "sum の値 6 を表示します。", change: "出力", before: "—", after: "6", next: "12行目：処理を終了" },
+  { line: 11, title: "結果を表示", detail: "sum の値 6 を表示します。", change: "出力", before: "—", after: "6", next: "12行目：処理を終了", output: "6" },
   { line: 12, title: "処理を終了", detail: "最後までたどり着きました。", change: "sum", before: "6", after: "6", next: "ここで終了" }
 ];
+
+// 入力値だけを差し替える、scanfサンプル専用の固定デモです。
+function scanfSteps(value) {
+  return [
+    { line: 4, title: "入力先を用意", detail: "整数を入れる n を用意します。", change: "n", before: "—", after: "未代入", next: "6行目：入力値を受け取る" },
+    { line: 6, title: "入力値を受け取る", detail: `scanf で入力値 ${value} を n に入れます。`, change: "n", before: "未代入", after: value, next: "8行目：n を表示" },
+    { line: 8, title: "結果を表示", detail: `printf で n の値 ${value} を表示します。`, change: "出力", before: "—", after: value, next: "9行目：処理を終了", output: value },
+    { line: 9, title: "処理を終了", detail: "入力した値が出力されました。", change: "n", before: value, after: value, next: "ここで終了" }
+  ];
+}
 
 const $ = (id) => document.getElementById(id);
 const flow = $("flow-content");
 const feedback = $("feedback");
 const visualizeButton = $("visualize");
 const demoMode = $("demo-mode");
+const sampleSelect = $("sample-select");
+const scanfInput = $("scanf-input");
+const outputCard = document.querySelector(".output-card");
 const editor = CodeMirror.fromTextArea($("code-input"), {
   value: sampleCode,
   mode: "text/x-csrc",
@@ -60,6 +89,10 @@ let activeStep = -1;
 let currentCursorLine = -1;
 let highlightedLine = -1;
 let resultCode = null;
+let resultInput = null;
+let resultInputRaw = "";
+let activeSample = "for";
+let currentSteps = [];
 let pendingRequest = 0;
 let alignmentCheckPending = false;
 
@@ -103,6 +136,36 @@ function element(tag, className, content) {
   if (className) node.className = className;
   if (content !== undefined) node.textContent = content;
   return node;
+}
+
+function setOutput(state, value = null) {
+  const descriptions = {
+    idle: "まだ出力されていません",
+    progress: "printfへ進むと表示されます",
+    stale: "更新前の出力を閉じました",
+    failure: "出力は確定していません",
+    ready: "printfで表示しました"
+  };
+  $("output-state").textContent = descriptions[state];
+  $("output-value").textContent = state === "ready" ? value : "—";
+  outputCard.classList.toggle("has-output", state === "ready");
+}
+
+function syncInputField() {
+  const usesInput = samples[activeSample]?.usesInput ?? false;
+  scanfInput.disabled = !usesInput;
+  $("scanf-hint").textContent = usesInput
+    ? "整数を1つ入力してください（UIモック用）"
+    : "このサンプルでは使用しません";
+}
+
+function readDemoInput() {
+  const raw = scanfInput.value.trim();
+  if (!raw) return { error: "入力値（scanf）に整数を1つ入力してください。" };
+  if (!/^[+-]?\d+$/.test(raw) || !Number.isSafeInteger(Number(raw))) {
+    return { error: "入力値（scanf）には整数を1つ入力してください。" };
+  }
+  return { value: String(Number(raw)) };
 }
 
 function setFeedback(kind, title, message, actionLabel, action) {
@@ -155,13 +218,13 @@ function showExecutionLine(lineNumber) {
 }
 
 function renderStep() {
-  const step = steps[activeStep];
+  const step = currentSteps[activeStep];
   showExecutionLine(step.line);
   const top = element("div", "step-top");
-  top.append(element("span", "", `STEP ${String(activeStep + 1).padStart(2, "0")} / ${steps.length}`), element("span", "", `${step.line} 行目`));
+  top.append(element("span", "", `STEP ${String(activeStep + 1).padStart(2, "0")} / ${currentSteps.length}`), element("span", "", `${step.line} 行目`));
   const track = element("div", "step-track");
   const fill = element("span");
-  fill.style.width = `${(activeStep + 1) / steps.length * 100}%`;
+  fill.style.width = `${(activeStep + 1) / currentSteps.length * 100}%`;
   track.append(fill);
   const code = element("div", "step-code");
   code.append(element("small", "", "いま実行している行"), element("code", "", editor.getLine(step.line - 1)));
@@ -172,10 +235,12 @@ function renderStep() {
   const next = element("div", "next-line");
   next.append(element("span", "", "次： "), element("strong", "", step.next));
   flow.replaceChildren(top, track, code, detail, value, next);
-  $("step-count").textContent = `${activeStep + 1} / ${steps.length}`;
+  $("step-count").textContent = `${activeStep + 1} / ${currentSteps.length}`;
   $("step-prev").disabled = activeStep === 0;
-  $("step-next").disabled = activeStep === steps.length - 1;
-  if (activeStep === steps.length - 1) {
+  $("step-next").disabled = activeStep === currentSteps.length - 1;
+  const printedStep = currentSteps.slice(0, activeStep + 1).reverse().find((item) => item.output !== undefined);
+  setOutput(printedStep ? "ready" : "progress", printedStep?.output);
+  if (activeStep === currentSteps.length - 1) {
     setFeedback("success", "やった！ 最後までたどれました", "このデモの対応範囲で処理の流れを可視化できました。別の操作も試してみましょう。", "もう一度見る", () => { activeStep = 0; renderStep(); });
   } else {
     setFeedback("success", "可視化を始めました", "次へを押して、同じ行へ戻る様子を追ってみましょう。");
@@ -189,7 +254,11 @@ function invalidateResult(message = "コードが変更されました。もう�
   $("visualize-text").textContent = "コードを可視化する";
   activeStep = -1;
   resultCode = null;
+  resultInput = null;
+  resultInputRaw = "";
+  currentSteps = [];
   showExecutionLine(null);
+  setOutput("stale");
   showIdle("更新を待っています", "コードとSTEPがずれないように、古い結果を閉じました。", "↻");
   setFeedback("stale", "もう一度、試せます", message, "可視化する", () => visualizeButton.click());
 }
@@ -198,7 +267,18 @@ editor.on("cursorActivity", updateCursor);
 editor.on("change", () => {
   if (resultCode !== null) invalidateResult();
 });
+scanfInput.addEventListener("input", () => {
+  if (resultCode !== null) invalidateResult("入力値が変更されました。もう一度可視化してください。");
+});
+sampleSelect.addEventListener("change", () => {
+  activeSample = sampleSelect.value;
+  scanfInput.value = "";
+  syncInputField();
+  editor.setValue(samples[activeSample].code);
+  invalidateResult("サンプルを変更しました。もう一度可視化してください。");
+});
 updateCursor();
+syncInputField();
 window.addEventListener("resize", checkEditorAlignment);
 window.visualViewport?.addEventListener("resize", checkEditorAlignment);
 showIdle("準備ができました", "左のコードを見たり書き換えたりして、可視化ボタンを押してください。");
@@ -210,9 +290,27 @@ for (const eventName of ["pointerup", "pointercancel", "pointerleave"]) {
 visualizeButton.addEventListener("click", () => {
   const request = ++pendingRequest;
   const mode = demoMode.value;
+  const input = activeSample === "scanf" ? readDemoInput() : null;
+  if (activeSample === "custom" || input?.error) {
+    resultCode = null;
+    resultInput = null;
+    resultInputRaw = "";
+    currentSteps = [];
+    activeStep = -1;
+    showExecutionLine(null);
+    setOutput("failure");
+    const message = input?.error ?? "この履歴のコードには固定STEPがありません。ヘッダーからサンプルを選んでください。";
+    showIdle("準備を確認しましょう", message, "!");
+    setFeedback("failure", "あともう一歩！", message);
+    return;
+  }
   resultCode = editor.getValue();
+  resultInput = input?.value ?? null;
+  resultInputRaw = scanfInput.value.trim();
+  currentSteps = activeSample === "scanf" ? scanfSteps(resultInput) : forSteps;
   activeStep = -1;
   showExecutionLine(null);
+  setOutput("progress");
   showIdle("受け付けました", "固定デモの結果を表示します。", "◌");
   setFeedback("processing", "操作を受け付けました", "結果を表示しています……");
   visualizeButton.disabled = true;
@@ -223,11 +321,17 @@ visualizeButton.addEventListener("click", () => {
     visualizeButton.disabled = false;
     $("visualize-text").textContent = "もう一度可視化する";
     if (mode === "failure") {
-      showIdle("あともう一歩！", "DEMO：8行目を確認する例です。入力コードの正誤を判定した結果ではありません。", "!");
-      setFeedback("failure", "あともう一歩！", "DEMO：8行目の文末のセミコロンを確認してみましょう。直したら、もう一度可視化できます。", "8行目を見る", () => {
+      const targetLine = activeSample === "scanf" ? 5 : 7;
+      const hint = activeSample === "scanf"
+        ? "DEMO：6行目のscanfと入力値の設定を確認してみましょう。"
+        : "DEMO：8行目の文末のセミコロンを確認してみましょう。";
+      setOutput("failure");
+      showIdle("あともう一歩！", `${hint} 入力コードの正誤を判定した結果ではありません。`, "!");
+      setFeedback("failure", "あともう一歩！", `${hint} 確認したら、もう一度可視化できます。`, `${targetLine + 1}行目を見る`, () => {
         editor.focus();
-        editor.setCursor({ line: Math.min(7, editor.lineCount() - 1), ch: 0 });
-        editor.scrollIntoView({ line: Math.min(7, editor.lineCount() - 1), ch: 0 }, 80);
+        const line = Math.min(targetLine, editor.lineCount() - 1);
+        editor.setCursor({ line, ch: 0 });
+        scrollExecutionLineIntoView(line);
       });
     } else {
       activeStep = 0;
@@ -236,8 +340,20 @@ visualizeButton.addEventListener("click", () => {
   }, 180);
 });
 
-$("step-next").addEventListener("click", () => { if (activeStep >= 0 && activeStep < steps.length - 1 && editor.getValue() === resultCode) { activeStep++; renderStep(); } });
-$("step-prev").addEventListener("click", () => { if (activeStep > 0 && editor.getValue() === resultCode) { activeStep--; renderStep(); } });
+function hasCurrentResult() {
+  return editor.getValue() === resultCode && scanfInput.value.trim() === resultInputRaw;
+}
+
+$("step-next").addEventListener("click", () => {
+  if (activeStep < 0 || activeStep >= currentSteps.length - 1 || !hasCurrentResult()) return;
+  activeStep++;
+  renderStep();
+});
+$("step-prev").addEventListener("click", () => {
+  if (activeStep <= 0 || !hasCurrentResult()) return;
+  activeStep--;
+  renderStep();
+});
 demoMode.addEventListener("change", () => { if (resultCode !== null) invalidateResult("DEMOの結果を切り替えました。もう一度可視化してください。"); });
 
 const dialog = $("history-dialog");
@@ -246,6 +362,10 @@ for (const entry of historyEntries) {
   item.type = "button";
   item.append(element("strong", "", entry.name), element("small", "", `${entry.time}　${entry.result} · DEMO`));
   item.addEventListener("click", () => {
+    activeSample = entry.sample;
+    sampleSelect.value = activeSample;
+    scanfInput.value = "";
+    syncInputField();
     editor.setValue(entry.code);
     demoMode.value = entry.mode;
     invalidateResult("履歴のコードを読み込みました。可視化すると、固定デモの結果が表示されます。");
