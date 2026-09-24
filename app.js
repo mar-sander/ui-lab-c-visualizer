@@ -93,6 +93,7 @@ let resultInput = null;
 let resultInputRaw = "";
 let activeSample = "for";
 let currentSteps = [];
+let finalState = null;
 let pendingRequest = 0;
 let alignmentCheckPending = false;
 
@@ -149,6 +150,28 @@ function setOutput(state, value = null) {
   $("output-state").textContent = descriptions[state];
   $("output-value").textContent = state === "ready" ? value : "—";
   outputCard.classList.toggle("has-output", state === "ready");
+}
+
+// 最終状態はサンプル固有のデモデータです。コードから計算しません。
+function makeFinalState() {
+  const printedStep = currentSteps.find((step) => step.output !== undefined);
+  if (!printedStep) return null;
+  const variables = activeSample === "for"
+    ? [["sum", "6"], ["i", "4"]]
+    : [["n", resultInput]];
+  return { output: printedStep.output, variables };
+}
+
+function showFinalSummary(state) {
+  $("summary-output").textContent = state?.output ?? "—";
+  const variables = $("summary-variables");
+  if (!state) {
+    variables.textContent = "—";
+    return;
+  }
+  variables.replaceChildren(...state.variables.map(([name, value]) =>
+    element("span", "summary-variable", `${name} = ${value}`)
+  ));
 }
 
 function syncInputField() {
@@ -240,8 +263,8 @@ function renderStep() {
   next.append(element("span", "", "次： "), element("strong", "", step.next));
   flow.replaceChildren(top, track, code, detail, value, next);
   $("step-count").textContent = `${activeStep + 1} / ${currentSteps.length}`;
-  $("step-prev").disabled = activeStep === 0;
-  $("step-next").disabled = activeStep === currentSteps.length - 1;
+  $("step-prev").disabled = false;
+  $("step-next").disabled = false;
   const printedStep = currentSteps.slice(0, activeStep + 1).reverse().find((item) => item.output !== undefined);
   setOutput(printedStep ? "ready" : "progress", printedStep?.output);
   if (activeStep === currentSteps.length - 1) {
@@ -253,13 +276,19 @@ function renderStep() {
 
 // RESULTは処理上のSTEPではありません。最初は結論だけを見せます。
 function showResultPage() {
-  const printedStep = currentSteps.find((step) => step.output !== undefined);
-  if (!printedStep || !hasCurrentResult()) return;
+  if (!finalState || !hasCurrentResult()) return;
   activeStep = -1;
   showExecutionLine(null);
   const result = element("div", "result-state");
   const label = element("span", "result-label", "RESULT");
-  const value = element("output", "result-value", printedStep.output);
+  const value = element("output", "result-value", finalState.output);
+  const variables = element("div", "result-variables");
+  variables.append(element("span", "result-variables-label", "VARIABLES"));
+  const variableValues = element("div", "result-variable-values");
+  for (const [name, finalValue] of finalState.variables) {
+    variableValues.append(element("span", "result-variable", `${name} = ${finalValue}`));
+  }
+  variables.append(variableValues);
   const viewFlow = element("button", "result-flow-button", "流れを見る →");
   viewFlow.type = "button";
   viewFlow.addEventListener("click", () => {
@@ -267,7 +296,7 @@ function showResultPage() {
     activeStep = 0;
     renderStep();
   });
-  result.append(label, value, viewFlow);
+  result.append(label, value, variables, viewFlow);
   flow.replaceChildren(result);
   $("step-controls").hidden = true;
   outputCard.hidden = true;
@@ -285,6 +314,8 @@ function invalidateResult(message = "コードが変更されました。もう�
   resultInput = null;
   resultInputRaw = "";
   currentSteps = [];
+  finalState = null;
+  showFinalSummary(null);
   showExecutionLine(null);
   setOutput("stale");
   showIdle("更新を待っています", "コードとSTEPがずれないように、古い結果を閉じました。", "↻");
@@ -319,6 +350,8 @@ visualizeButton.addEventListener("click", () => {
   const request = ++pendingRequest;
   const mode = demoMode.value;
   const input = activeSample === "scanf" ? readDemoInput() : null;
+  finalState = null;
+  showFinalSummary(null);
   if (activeSample === "custom" || input?.error) {
     resultCode = null;
     resultInput = null;
@@ -362,6 +395,8 @@ visualizeButton.addEventListener("click", () => {
       });
       flow.scrollIntoView({ behavior: "auto", block: "start" });
     } else {
+      finalState = makeFinalState();
+      showFinalSummary(finalState);
       showResultPage();
     }
   }, 180);
@@ -372,12 +407,20 @@ function hasCurrentResult() {
 }
 
 $("step-next").addEventListener("click", () => {
-  if (activeStep < 0 || activeStep >= currentSteps.length - 1 || !hasCurrentResult()) return;
+  if (activeStep < 0 || !hasCurrentResult()) return;
+  if (activeStep === currentSteps.length - 1) {
+    showResultPage();
+    return;
+  }
   activeStep++;
   renderStep();
 });
 $("step-prev").addEventListener("click", () => {
-  if (activeStep <= 0 || !hasCurrentResult()) return;
+  if (activeStep < 0 || !hasCurrentResult()) return;
+  if (activeStep === 0) {
+    showResultPage();
+    return;
+  }
   activeStep--;
   renderStep();
 });

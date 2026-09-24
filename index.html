@@ -34,7 +34,13 @@
           </div>
         </section>
         <section class="action-area" aria-label="可視化操作">
-          <div class="demo-switch"><label for="demo-mode">DEMO の結果</label><select id="demo-mode"><option value="success">可視化できる</option><option value="failure">あともう一歩</option></select></div>
+          <div class="action-tools">
+            <div class="demo-switch"><label for="demo-mode">DEMO の結果</label><select id="demo-mode"><option value="success">可視化できる</option><option value="failure">あともう一歩</option></select></div>
+            <div class="final-summary" role="status" aria-live="polite" aria-label="最終結果サマリー">
+              <div><span>実行結果</span><strong id="summary-output">—</strong></div>
+              <div><span>変数</span><div id="summary-variables" class="summary-variables">—</div></div>
+            </div>
+          </div>
           <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
         </section>
         <section class="panel flow-panel" aria-label="02 / FLOW">
