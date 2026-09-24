@@ -26,6 +26,7 @@ button:focus-visible,select:focus-visible{outline-color:var(--accent-yellow)}
 .CodeMirror-cursor{border-left-color:#ffffff}
 .CodeMirror-activeline-gutter{background:#454545}
 .CodeMirror-activeline-gutter .CodeMirror-linenumber{color:#ffffff;font-weight:400}
+.CodeMirror-cursor-line{background:rgb(255 255 255 / 6%)}
 .CodeMirror-execution-line{background:var(--accent-yellow-soft)}
 .CodeMirror-execution-gutter{background:var(--accent-yellow-gutter)}
 .CodeMirror-execution-gutter .CodeMirror-linenumber{color:var(--accent-yellow);font-weight:400}

@@ -217,15 +217,19 @@ function showIdle(title, description, icon = "◎") {
   outputCard.hidden = false;
 }
 
-// 編集カーソルの位置はガターだけに示し、実行位置と混同しないようにします。
+// 編集行を薄く示します。実行行と重なる場合は黄色の表示を優先します。
 function updateCursor() {
   const line = editor.getCursor().line;
   if (line === currentCursorLine) return;
   if (currentCursorLine >= 0 && currentCursorLine < editor.lineCount()) {
     editor.removeLineClass(currentCursorLine, "gutter", "CodeMirror-activeline-gutter");
+    editor.removeLineClass(currentCursorLine, "background", "CodeMirror-cursor-line");
   }
   currentCursorLine = line;
   editor.addLineClass(line, "gutter", "CodeMirror-activeline-gutter");
+  if (line !== highlightedLine) {
+    editor.addLineClass(line, "background", "CodeMirror-cursor-line");
+  }
   checkEditorAlignment();
 }
 
@@ -233,9 +237,15 @@ function showExecutionLine(lineNumber) {
   if (highlightedLine >= 0) {
     editor.removeLineClass(highlightedLine, "background", "CodeMirror-execution-line");
     editor.removeLineClass(highlightedLine, "gutter", "CodeMirror-execution-gutter");
+    if (highlightedLine === currentCursorLine) {
+      editor.addLineClass(highlightedLine, "background", "CodeMirror-cursor-line");
+    }
   }
   highlightedLine = lineNumber === null ? -1 : lineNumber - 1;
   if (highlightedLine < 0 || highlightedLine >= editor.lineCount()) return;
+  if (highlightedLine === currentCursorLine) {
+    editor.removeLineClass(highlightedLine, "background", "CodeMirror-cursor-line");
+  }
   editor.addLineClass(highlightedLine, "background", "CodeMirror-execution-line");
   editor.addLineClass(highlightedLine, "gutter", "CodeMirror-execution-gutter");
   scrollExecutionLineIntoView(highlightedLine);
