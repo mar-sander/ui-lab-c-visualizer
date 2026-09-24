@@ -94,6 +94,7 @@ let resultInputRaw = "";
 let activeSample = "for";
 let currentSteps = [];
 let finalState = null;
+const jumpableLines = new Set();
 let pendingRequest = 0;
 let alignmentCheckPending = false;
 
@@ -315,8 +316,29 @@ function showResultPage() {
   flow.scrollIntoView({ behavior: "auto", block: "start" });
 }
 
+// RUNで確定したSTEPがある行だけ、既存の行番号ガターから移動できます。
+function clearJumpableLines() {
+  for (const line of jumpableLines) {
+    if (line < editor.lineCount()) {
+      editor.removeLineClass(line, "gutter", "CodeMirror-step-jump");
+    }
+  }
+  jumpableLines.clear();
+}
+
+function markJumpableLines() {
+  clearJumpableLines();
+  for (const step of currentSteps) {
+    const line = step.line - 1;
+    if (line < 0 || line >= editor.lineCount() || jumpableLines.has(line)) continue;
+    jumpableLines.add(line);
+    editor.addLineClass(line, "gutter", "CodeMirror-step-jump");
+  }
+}
+
 function invalidateResult(message = "コードが変更されました。もう一度可視化してください。") {
   pendingRequest++;
+  clearJumpableLines();
   visualizeButton.disabled = false;
   visualizeButton.classList.remove("pressed");
   activeStep = -1;
@@ -333,6 +355,13 @@ function invalidateResult(message = "コードが変更されました。もう�
 }
 
 editor.on("cursorActivity", updateCursor);
+editor.on("gutterClick", (_editor, line, gutter) => {
+  if (gutter !== "CodeMirror-linenumbers" || !finalState || !hasCurrentResult()) return;
+  const index = currentSteps.findIndex((step) => step.line === line + 1);
+  if (index < 0) return;
+  activeStep = index;
+  renderStep();
+});
 editor.on("change", () => {
   if (resultCode !== null) invalidateResult();
 });
@@ -358,6 +387,7 @@ for (const eventName of ["pointerup", "pointercancel", "pointerleave"]) {
 }
 visualizeButton.addEventListener("click", () => {
   const request = ++pendingRequest;
+  clearJumpableLines();
   const mode = demoMode.value;
   const input = activeSample === "scanf" ? readDemoInput() : null;
   finalState = null;
@@ -407,6 +437,7 @@ visualizeButton.addEventListener("click", () => {
     } else {
       finalState = makeFinalState();
       showFinalSummary(finalState);
+      markJumpableLines();
       showResultPage();
     }
   }, 180);

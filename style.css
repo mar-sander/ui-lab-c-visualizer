@@ -23,6 +23,8 @@ button:focus-visible,select:focus-visible{outline-color:var(--accent-yellow)}
 .CodeMirror{background:var(--surface-inset);color:#dedede}
 .CodeMirror-gutters{background:#191919;border-right-color:var(--line)}
 .CodeMirror-linenumber{color:#8f8f8f;font-variant-numeric:tabular-nums;font-weight:400}
+.CodeMirror-step-jump,.CodeMirror-step-jump .CodeMirror-linenumber{cursor:pointer}
+.CodeMirror-step-jump:not(.CodeMirror-execution-gutter):not(.CodeMirror-activeline-gutter):hover .CodeMirror-linenumber{color:#c9c9c9}
 .CodeMirror-cursor{border-left-color:#ffffff}
 .CodeMirror-activeline-gutter{background:#454545}
 .CodeMirror-activeline-gutter .CodeMirror-linenumber{color:#ffffff;font-weight:400}
