@@ -190,7 +190,8 @@ function showIdle(title, description, icon = "◎") {
   $("step-count").textContent = "— / —";
   $("step-prev").disabled = true;
   $("step-next").disabled = true;
-  $("quick-result").disabled = true;
+  $("step-controls").hidden = false;
+  outputCard.hidden = false;
 }
 
 // 編集カーソルの位置はガターだけに示し、実行位置と混同しないようにします。
@@ -220,6 +221,8 @@ function showExecutionLine(lineNumber) {
 
 function renderStep() {
   const step = currentSteps[activeStep];
+  $("step-controls").hidden = false;
+  outputCard.hidden = false;
   showExecutionLine(step.line);
   const top = element("div", "step-top");
   top.append(element("span", "", `STEP ${String(activeStep + 1).padStart(2, "0")} / ${currentSteps.length}`), element("span", "", `${step.line} 行目`));
@@ -239,7 +242,6 @@ function renderStep() {
   $("step-count").textContent = `${activeStep + 1} / ${currentSteps.length}`;
   $("step-prev").disabled = activeStep === 0;
   $("step-next").disabled = activeStep === currentSteps.length - 1;
-  $("quick-result").disabled = activeStep === currentSteps.length - 1;
   const printedStep = currentSteps.slice(0, activeStep + 1).reverse().find((item) => item.output !== undefined);
   setOutput(printedStep ? "ready" : "progress", printedStep?.output);
   if (activeStep === currentSteps.length - 1) {
@@ -249,11 +251,35 @@ function renderStep() {
   }
 }
 
+// RESULTは処理上のSTEPではありません。最初は結論だけを見せます。
+function showResultPage() {
+  const printedStep = currentSteps.find((step) => step.output !== undefined);
+  if (!printedStep || !hasCurrentResult()) return;
+  activeStep = -1;
+  showExecutionLine(null);
+  const result = element("div", "result-state");
+  const label = element("span", "result-label", "RESULT");
+  const value = element("output", "result-value", printedStep.output);
+  const viewFlow = element("button", "result-flow-button", "流れを見る →");
+  viewFlow.type = "button";
+  viewFlow.addEventListener("click", () => {
+    if (!hasCurrentResult() || activeStep !== -1) return;
+    activeStep = 0;
+    renderStep();
+  });
+  result.append(label, value, viewFlow);
+  flow.replaceChildren(result);
+  $("step-controls").hidden = true;
+  outputCard.hidden = true;
+  feedback.replaceChildren();
+  // RUNが画面のどこから押されても、表示した結論が見える位置へ移動します。
+  flow.scrollIntoView({ behavior: "auto", block: "start" });
+}
+
 function invalidateResult(message = "コードが変更されました。もう一度可視化してください。") {
   pendingRequest++;
   visualizeButton.disabled = false;
   visualizeButton.classList.remove("pressed");
-  $("visualize-text").textContent = "コードを可視化する";
   activeStep = -1;
   resultCode = null;
   resultInput = null;
@@ -262,7 +288,7 @@ function invalidateResult(message = "コードが変更されました。もう�
   showExecutionLine(null);
   setOutput("stale");
   showIdle("更新を待っています", "コードとSTEPがずれないように、古い結果を閉じました。", "↻");
-  setFeedback("stale", "もう一度、試せます", message, "可視化する", () => visualizeButton.click());
+  setFeedback("stale", "もう一度、試せます", message, "RUN", () => visualizeButton.click());
 }
 
 editor.on("cursorActivity", updateCursor);
@@ -283,7 +309,7 @@ updateCursor();
 syncInputField();
 window.addEventListener("resize", checkEditorAlignment);
 window.visualViewport?.addEventListener("resize", checkEditorAlignment);
-showIdle("準備ができました", "左のコードを見たり書き換えたりして、可視化ボタンを押してください。");
+showIdle("準備ができました", "左のコードを見たり書き換えたりして、RUNを押してください。");
 
 visualizeButton.addEventListener("pointerdown", () => visualizeButton.classList.add("pressed"));
 for (const eventName of ["pointerup", "pointercancel", "pointerleave"]) {
@@ -304,6 +330,7 @@ visualizeButton.addEventListener("click", () => {
     const message = input?.error ?? "この履歴のコードには固定STEPがありません。ヘッダーからサンプルを選んでください。";
     showIdle("準備を確認しましょう", message, "!");
     setFeedback("failure", "あともう一歩！", message);
+    flow.scrollIntoView({ behavior: "auto", block: "start" });
     return;
   }
   resultCode = editor.getValue();
@@ -316,12 +343,10 @@ visualizeButton.addEventListener("click", () => {
   showIdle("受け付けました", "固定デモの結果を表示します。", "◌");
   setFeedback("processing", "操作を受け付けました", "結果を表示しています……");
   visualizeButton.disabled = true;
-  $("visualize-text").textContent = "受け付けました";
   // 通信や解析待ちではなく、押下と結果の関係を見せる短い反応です。
   window.setTimeout(() => {
     if (request !== pendingRequest) return;
     visualizeButton.disabled = false;
-    $("visualize-text").textContent = "もう一度可視化する";
     if (mode === "failure") {
       const targetLine = activeSample === "scanf" ? 5 : 7;
       const hint = activeSample === "scanf"
@@ -335,9 +360,9 @@ visualizeButton.addEventListener("click", () => {
         editor.setCursor({ line, ch: 0 });
         scrollExecutionLineIntoView(line);
       });
+      flow.scrollIntoView({ behavior: "auto", block: "start" });
     } else {
-      activeStep = 0;
-      renderStep();
+      showResultPage();
     }
   }, 180);
 });
@@ -354,11 +379,6 @@ $("step-next").addEventListener("click", () => {
 $("step-prev").addEventListener("click", () => {
   if (activeStep <= 0 || !hasCurrentResult()) return;
   activeStep--;
-  renderStep();
-});
-$("quick-result").addEventListener("click", () => {
-  if (activeStep < 0 || !currentSteps.length || !hasCurrentResult()) return;
-  activeStep = currentSteps.length - 1;
   renderStep();
 });
 demoMode.addEventListener("change", () => { if (resultCode !== null) invalidateResult("DEMOの結果を切り替えました。もう一度可視化してください。"); });

@@ -34,19 +34,20 @@
           </div>
         </section>
         <section class="action-area" aria-label="可視化操作">
-          <div class="action-row"><button type="button" id="visualize" class="visualize-button"><span class="play-icon" aria-hidden="true">▶</span><span id="visualize-text">コードを可視化する</span><span class="button-arrow" aria-hidden="true">↗</span></button><div class="demo-switch"><label for="demo-mode">DEMO の結果</label><select id="demo-mode"><option value="success">可視化できる</option><option value="failure">あともう一歩</option></select></div></div>
+          <div class="demo-switch"><label for="demo-mode">DEMO の結果</label><select id="demo-mode"><option value="success">可視化できる</option><option value="failure">あともう一歩</option></select></div>
           <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
         </section>
         <section class="panel flow-panel" aria-label="02 / FLOW">
           <div class="panel-heading"><span class="section-index">02 / FLOW</span></div>
           <div id="flow-content" class="flow-content" aria-live="polite" aria-atomic="true"></div>
-          <div class="output-card"><div class="output-info" role="status" aria-live="polite" aria-atomic="true"><span class="output-heading">OUTPUT / 出力結果</span><span id="output-state" class="output-state">まだ出力されていません</span></div><div class="output-result"><output id="output-value" role="status" aria-live="polite">—</output><button type="button" id="quick-result" class="quick-result-button" disabled>結果を見る →</button></div></div>
-          <div class="step-controls" aria-label="STEP操作"><button type="button" id="step-prev" class="step-button" disabled>← 前へ</button><span id="step-count" class="step-count">— / —</span><button type="button" id="step-next" class="step-button" disabled>次へ →</button></div>
+          <div class="output-card" role="status" aria-live="polite" aria-atomic="true"><div><span class="output-heading">OUTPUT / 出力結果</span><span id="output-state" class="output-state">まだ出力されていません</span></div><output id="output-value">—</output></div>
+          <div id="step-controls" class="step-controls" aria-label="STEP操作"><button type="button" id="step-prev" class="step-button" disabled>← 前へ</button><span id="step-count" class="step-count">— / —</span><button type="button" id="step-next" class="step-button" disabled>次へ →</button></div>
         </section>
       </div>
       <p class="footnote">この画面は UI の試遊版です。入力した C コードの解析・実行・正誤判定は行いません。表示される STEP と結果は固定のデモデータです。</p>
     </main>
   </div>
+  <button type="button" id="visualize" class="visualize-button" aria-label="RUN：コードの可視化を開始"><span class="play-icon" aria-hidden="true">▶</span><span>RUN</span></button>
   <dialog id="history-dialog" class="history-dialog" aria-labelledby="history-title"><div class="dialog-heading"><div><span class="section-index">YOUR SAVE POINTS</span><h2 id="history-title">試行の履歴</h2></div><button type="button" id="history-close" class="close-button" aria-label="履歴を閉じる">×</button></div><p>過去のコードを選ぶと、編集欄に戻せます。この履歴はデモ用です。</p><div id="history-list" class="history-list"></div></dialog>
 </body>
 </html>
